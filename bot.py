@@ -16,5 +16,7 @@ async def on_ready():
     print(f"{client.user} is connected to {connected_guilds} guilds.")
     for guild in client.guilds:
         print(f"  - {guild.name} (ID: {guild.id})")
+        for member in guild.members:
+            print(f"    - {member.name} (ID: {member.id})")
 
 client.run(TOKEN)
