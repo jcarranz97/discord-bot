@@ -20,6 +20,14 @@ class MyBotClient(discord.Client):
             for member in guild.members:
                 print(f"    - {member.name} (ID: {member.id})")
 
+    async def on_member_join(self, member):
+        """ When a member joins the guild """
+        print(f"{member.name} joined the guild.")
+        await member.create_dm()
+        await member.dm_channel.send(
+            f"Hi {member.name}, welcome to the this server!"
+        )
+
 
 client = MyBotClient(intents=discord.Intents.all())
 client.run(TOKEN)
