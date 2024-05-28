@@ -40,7 +40,7 @@ class MyBotClient(commands.Bot):
                 raise discord.DiscordException
 
 
-class MyCog(commands.Cog):
+class LearningCog(commands.Cog):
     """ Custom cog """
     def __init__(self, bot):
         self.bot = bot
@@ -114,9 +114,9 @@ async def main():
     """ Main function """
     async with MyBotClient(
         intents=discord.Intents.all(),
-        command_prefix="b!"
+        command_prefix=commands.when_mentioned_or("b!"),
     ) as bot:
-        await bot.add_cog(MyCog(bot))
+        await bot.add_cog(LearningCog(bot))
         await bot.start(TOKEN)
 
 
