@@ -6,13 +6,23 @@ import random
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from strenum import StrEnum
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')  # Get the token from the .env file
 
 
+class Channels(StrEnum):
+    """ Enum for channels """
+    FORTNITE = "fortnite"
+
+
 class MyBotClient(commands.Bot):
     """ Custom bot client """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__playing_fornite = []
+
     async def on_ready(self):
         """ When the bot is ready """
         print(f'{self.user} has connected to Discord!')
@@ -38,6 +48,36 @@ class MyBotClient(commands.Bot):
                 f.write(f"Unhandled message: {args[0]}\n")
             else:
                 raise discord.DiscordException
+
+    async def on_voice_state_update(self, member, before, after):
+        """ When a member joins or leaves a voice channel """
+        # Reference:
+        #  - https://discordpy.readthedocs.io/en/stable/api.html#voice
+        #  - https://discordpy.readthedocs.io/en/stable/api.html#discord.VoiceState  # noqa
+        if before.channel is None:
+            print(f"{member.name} joined {after.channel.name}.")
+            if after.channel.name == Channels.FORTNITE:
+                self.__playing_fornite.append(member)
+                print(f"{member.name} is playing Fortnite.")
+        elif after.channel is None:
+            print(f"{member.name} left {before.channel.name}.")
+            if before.channel.name == Channels.FORTNITE.value:
+                self.__playing_fornite.remove(member)
+                print(f"{member.name} stopped playing Fortnite.")
+        else:
+            print(f"{member.name} moved from {before.channel.name} to {after.channel.name}.")  # noqa
+            if before.channel == Channels.FORTNITE.value:
+                self.__playing_fornite.remove(member)
+                print(f"{member.name} stopped playing Fortnite.")
+            if after.channel == Channels.FORTNITE.value:
+                self.__playing_fornite.append(member)
+                print(f"{member.name} is playing Fortnite.")
+
+    @property
+    async def playing_fortnite(self):
+        """ Get the members playing Fortnite """
+        return self.__playing_fornite
+
 
 
 class LearningCog(commands.Cog):
@@ -108,6 +148,20 @@ class LearningCog(commands.Cog):
             await ctx.send('You guessed it right!')
         else:
             await ctx.send(f'You guessed it wrong. It was {number}.')
+
+    @commands.command(name='fortnite')
+    async def fortnite_command(self, ctx):
+        """Run the Fortnite command
+
+        This command is used to get the members playing Fortnite.
+        """
+        playing_fortnite = await self.bot.playing_fortnite
+        if playing_fortnite:
+            await ctx.send('The members playing Fortnite are:')
+            for member in playing_fortnite:
+                await ctx.send(f' - {member.name}')
+        else:
+            await ctx.send('No members are playing Fortnite.')
 
 
 async def main():
