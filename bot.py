@@ -28,6 +28,33 @@ class MyBotClient(discord.Client):
             f"Hi {member.name}, welcome to the this server!"
         )
 
+    async def on_message(self, message):
+        """ When a message is sent """
+        if message.author == self.user:
+            # Ignore messages from the bot
+            return
+
+        # Respond to messages
+        # Example: If the message is 'ping', respond with 'pong'
+        if message.content == 'ping':
+            await message.channel.send('pong')
+
+        # Example: If the message is 'raise-exception', raise an exception
+        if message.content == 'raise-exception':
+            raise discord.DiscordException
+
+        # Just print the message
+        text = f"What's up {message.author.name}? You said: {message.content}"
+        await message.channel.send(text)
+
+    async def on_error(self, event, *args, **kwargs):
+        """ When an error occurs """
+        with open('err.log', 'a', encoding='utf-8') as f:
+            if event == 'on_message':
+                f.write(f"Unhandled message: {args[0]}\n")
+            else:
+                raise discord.DiscordException
+
 
 client = MyBotClient(intents=discord.Intents.all())
 client.run(TOKEN)
