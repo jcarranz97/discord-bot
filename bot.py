@@ -2,6 +2,7 @@
 """ Example bot.py """
 import os
 import asyncio
+import random
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -46,15 +47,74 @@ class MyCog(commands.Cog):
 
     @commands.command(name='test')
     async def test_command(self, ctx):
-        """ Test command """
+        """Run the test command
+
+        This command is used to test the bot.
+        """
         await ctx.send('Test command executed!')
+
+    @commands.command(name='ping')
+    async def ping_command(self, ctx):
+        """Run the ping command
+
+        This command is used to test the latency of the bot.
+        """
+        await ctx.send(f'Pong! {round(self.bot.latency * 1000)}ms')
+
+    @commands.command(name='echo')
+    async def echo_command(self, ctx, *, message):
+        """Run the echo command
+
+        This command is used to echo a message.
+        """
+        await ctx.send(message)
+
+    @commands.command(name='choice')
+    async def choice_command(self, ctx, *choices):
+        """Run the choice command
+
+        This command is used to choose a random choice.
+        """
+        choice = random.choice(choices)
+        await ctx.send(f'I choose: {choice}')
+
+    @commands.command(name='whois')
+    async def whois_command(self, ctx, member: discord.Member):
+        """Run the whois command
+
+        This command is used to get information about a member.
+        """
+        await ctx.send(f'The user name is: {member.name}')
+        await ctx.send(f'The user ID is: {member.id}')
+        await ctx.send(f'The user status is: {member.status}')
+        await ctx.send(f'The user joined at: {member.joined_at}')
+
+    @commands.command(name='guess')
+    async def guess_command(self, ctx):
+        """Run the guess command
+
+        This command is used to guess a number.
+        """
+        number = random.randint(1, 10)
+        await ctx.send('Guess a number between 1 and 10.')
+
+        def check(msg):
+            return msg.author == ctx.author and msg.content.isdigit()
+
+        guess = await self.bot.wait_for('message', check=check)
+        guess = int(guess.content)
+
+        if guess == number:
+            await ctx.send('You guessed it right!')
+        else:
+            await ctx.send(f'You guessed it wrong. It was {number}.')
 
 
 async def main():
     """ Main function """
     async with MyBotClient(
         intents=discord.Intents.all(),
-        command_prefix="!"
+        command_prefix="b!"
     ) as bot:
         await bot.add_cog(MyCog(bot))
         await bot.start(TOKEN)
