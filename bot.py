@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """ Example bot.py """
 import os
+import asyncio
 import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')  # Get the token from the .env file
 
 
-class MyBotClient(discord.Client):
+class MyBotClient(commands.Bot):
     """ Custom bot client """
     async def on_ready(self):
         """ When the bot is ready """
@@ -28,25 +30,6 @@ class MyBotClient(discord.Client):
             f"Hi {member.name}, welcome to the this server!"
         )
 
-    async def on_message(self, message):
-        """ When a message is sent """
-        if message.author == self.user:
-            # Ignore messages from the bot
-            return
-
-        # Respond to messages
-        # Example: If the message is 'ping', respond with 'pong'
-        if message.content == 'ping':
-            await message.channel.send('pong')
-
-        # Example: If the message is 'raise-exception', raise an exception
-        if message.content == 'raise-exception':
-            raise discord.DiscordException
-
-        # Just print the message
-        text = f"What's up {message.author.name}? You said: {message.content}"
-        await message.channel.send(text)
-
     async def on_error(self, event, *args, **kwargs):
         """ When an error occurs """
         with open('err.log', 'a', encoding='utf-8') as f:
@@ -56,5 +39,26 @@ class MyBotClient(discord.Client):
                 raise discord.DiscordException
 
 
-client = MyBotClient(intents=discord.Intents.all())
-client.run(TOKEN)
+class MyCog(commands.Cog):
+    """ Custom cog """
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(name='test')
+    async def test_command(self, ctx):
+        """ Test command """
+        await ctx.send('Test command executed!')
+
+
+async def main():
+    """ Main function """
+    async with MyBotClient(
+        intents=discord.Intents.all(),
+        command_prefix="!"
+    ) as bot:
+        await bot.add_cog(MyCog(bot))
+        await bot.start(TOKEN)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
